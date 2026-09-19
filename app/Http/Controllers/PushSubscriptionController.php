@@ -1,0 +1,3 @@
+<?php
+namespace App\Http\Controllers;use App\Models\PushSubscription;use Illuminate\Http\Request;
+class PushSubscriptionController extends Controller {public function store(Request $r){$d=$r->validate(['endpoint'=>'required|url','keys.p256dh'=>'required|string','keys.auth'=>'required|string']);$r->user()->pushSubscriptions()->updateOrCreate(['endpoint'=>$d['endpoint']],['p256dh_key'=>$d['keys']['p256dh'],'auth_key'=>$d['keys']['auth']]);return response()->json(['ok'=>true]);}public function destroy(Request $r,PushSubscription $subscription){abort_unless($subscription->user_id===$r->user()->id,403);$subscription->delete();return response()->json(['ok'=>true]);}}

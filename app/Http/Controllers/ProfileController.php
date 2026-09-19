@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Controllers;
+use Illuminate\Http\Request; use Illuminate\Validation\Rules\Password;
+class ProfileController extends Controller {public function edit(Request $r){return view('profile.edit',['user'=>$r->user()]);}public function update(Request $r){$data=$r->validate(['name'=>'required|string|max:255','phone_number'=>'nullable|string|max:30','address'=>'nullable|string|max:1000','image'=>'nullable|image|mimes:jpg,jpeg,png,webp|max:5120']);if($r->hasFile('image'))$data['image_path']=$r->file('image')->store('avatars','public');unset($data['image']);$r->user()->update($data);return back()->with('success','Profile updated.');}public function password(Request $r){$data=$r->validate(['current_password'=>'required|current_password','password'=>['required','confirmed',Password::min(8)]]);$r->user()->update(['password'=>$data['password']]);return back()->with('success','Password updated successfully.');}}

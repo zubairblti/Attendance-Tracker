@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up():void{Schema::create('organization_settings',function(Blueprint $t){$t->id();$t->string('name')->default('QuadRoots');$t->string('tagline')->default('Attendance Tracker');$t->string('logo_path')->nullable();$t->string('primary_color',7)->default('#7357b5');$t->string('accent_color',7)->default('#58399d');$t->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();$t->timestamps();});} public function down():void{Schema::dropIfExists('organization_settings');} };

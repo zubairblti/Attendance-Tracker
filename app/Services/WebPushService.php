@@ -1,0 +1,4 @@
+<?php
+namespace App\Services;
+use App\Models\User;use Minishlink\WebPush\{Subscription,WebPush};
+class WebPushService {public function send(User $user,string $title,string $body,string $url='/'):void{if(!env('VAPID_PUBLIC_KEY')||!env('VAPID_PRIVATE_KEY'))return;$push=new WebPush(['VAPID'=>['subject'=>env('VAPID_SUBJECT','mailto:admin@example.com'),'publicKey'=>env('VAPID_PUBLIC_KEY'),'privateKey'=>env('VAPID_PRIVATE_KEY')]]);foreach($user->pushSubscriptions as $s)$push->queueNotification(Subscription::create(['endpoint'=>$s->endpoint,'publicKey'=>$s->p256dh_key,'authToken'=>$s->auth_key]),json_encode(compact('title','body','url')));foreach($push->flush() as $report)if(!$report->isSuccess()&&in_array($report->getResponse()?->getStatusCode(),[404,410]))$user->pushSubscriptions()->where('endpoint',$report->getRequest()->getUri()->__toString())->delete();}}
