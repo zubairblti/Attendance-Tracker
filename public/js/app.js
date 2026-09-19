@@ -3,9 +3,22 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.querySelectorAll('[data-modal]').forEach(button=>button.addEventListener('click',()=>document.getElementById(button.dataset.modal)?.showModal()));
     document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>button.closest('dialog').close()));
 
-    document.querySelectorAll('input[type="date"],input[type="datetime-local"],input[type="month"]').forEach(input=>{
-        input.addEventListener('click',()=>{if(typeof input.showPicker==='function')input.showPicker();});
-    });
+    const startFlatpickr=()=>{
+        document.querySelectorAll('input[type="date"],input[type="datetime-local"],input[type="month"]').forEach(input=>{
+            const pickerType=input.type;
+            input.type='text';
+            const options={disableMobile:true,allowInput:true,altInput:true};
+            if(pickerType==='datetime-local')Object.assign(options,{enableTime:true,dateFormat:'Y-m-d\\TH:i',altFormat:'d M Y, h:i K',time_24hr:false,altInputClass:'form-control flatpickr-input',onReady:(_,__,instance)=>instance.altInput.placeholder=input.placeholder||'Select date & time'});
+            else if(pickerType==='month')Object.assign(options,{dateFormat:'Y-m',altFormat:'F Y',plugins:[new monthSelectPlugin({shorthand:true,dateFormat:'Y-m',altFormat:'F Y'})],onReady:(_,__,instance)=>instance.altInput.placeholder=input.placeholder||'Select month'});
+            else Object.assign(options,{dateFormat:'Y-m-d',altFormat:'d M Y',onReady:(_,__,instance)=>instance.altInput.placeholder=input.placeholder||'Select date'});
+            flatpickr(input,options);
+        });
+    };
+    const addStylesheet=href=>{if(!document.querySelector(`link[href="${href}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=href;document.head.appendChild(link);}};
+    const loadScript=src=>new Promise((resolve,reject)=>{const existing=document.querySelector(`script[src="${src}"]`);if(existing){if(existing.dataset.loaded==='true')resolve();else existing.addEventListener('load',resolve,{once:true});return;}const script=document.createElement('script');script.src=src;script.addEventListener('load',()=>{script.dataset.loaded='true';resolve();},{once:true});script.addEventListener('error',reject,{once:true});document.head.appendChild(script);});
+    addStylesheet('/vendor/flatpickr/flatpickr.min.css');
+    addStylesheet('/vendor/flatpickr/monthSelect.css');
+    loadScript('/vendor/flatpickr/flatpickr.min.js').then(()=>loadScript('/vendor/flatpickr/monthSelect.js')).then(startFlatpickr);
 
     const startSweetAlerts=()=>{
         const toast=Swal.mixin({toast:true,position:'top-end',showConfirmButton:false,timer:3500,timerProgressBar:true});
