@@ -25,9 +25,9 @@ class ManagementWorkflowTest extends TestCase
         $this->assertSame('approved',$leave->fresh()->status);$this->assertNotNull($leave->fresh()->resolved_at);$this->assertSame($manager->id,$leave->fresh()->manager_approved_by);$this->assertSame(1,ApprovalHistory::count());
     }
 
-    public function test_final_break_correction_creates_break_record():void
+    public function test_manager_final_break_correction_creates_break_record():void
     {
-        Event::fake();$employee=$this->user('employee@test.com','Executive');$admin=$this->user('admin@test.com','admin');$clock=TimeClock::create(['user_id'=>$employee->id,'clock_in'=>now()->subHours(5)]);$item=EditRequest::create(['user_id'=>$employee->id,'time_clock_id'=>$clock->id,'requested_clock_in'=>now()->subHours(4),'requested_break_in'=>now()->subHours(3),'requested_break_out'=>now()->subHours(2),'reason'=>'Forgot','status'=>'pending_admin','request_type'=>'forgot_break_start']);
-        $this->actingAs($admin)->patch(route('edits.decision',[$item,'approve']))->assertRedirect();$this->assertDatabaseCount('breaks',1);$this->assertSame('approved',$item->fresh()->status);
+        Event::fake();$manager=$this->user('manager2@test.com','Manager');$employee=$this->user('employee2@test.com','Executive',['manager_id'=>$manager->id]);$clock=TimeClock::create(['user_id'=>$employee->id,'clock_in'=>now()->subHours(5)]);$item=EditRequest::create(['user_id'=>$employee->id,'time_clock_id'=>$clock->id,'requested_clock_in'=>now()->subHours(4),'requested_break_in'=>now()->subHours(3),'requested_break_out'=>now()->subHours(2),'reason'=>'Forgot','status'=>'pending_manager','request_type'=>'forgot_break_start']);
+        $this->actingAs($manager)->patch(route('edits.decision',[$item,'approve']))->assertRedirect();$this->assertDatabaseCount('breaks',1);$this->assertSame('approved',$item->fresh()->status);
     }
 }

@@ -89,7 +89,7 @@ A **department** is an organizational group; **Reports to manager/HOD** is the d
 | Role | Typical access |
 | --- | --- |
 | Super Admin | CRM setup, employees, departments, configurations, permissions, audits, and company reports. This account does not record employee attendance. It can monitor leaves but cannot approve or reject them. |
-| Admin / Manage Admin | Employee and report management, plus the final stage of attendance corrections under the default permissions. Not a final leave approver. |
+| Admin / Manage Admin | Employee and report management under the default permissions. They do not approve leave or attendance/break corrections. |
 | QA Admin | Attendance reports and request viewing under the default permissions. |
 | Director | Company-wide active-employee details in Team Status; may decide a leave when it is within the Director's reporting relationship. |
 | HOD | Their own details and the Manager/Executive records in managed departments; may decide leaves for employees they manage. |
@@ -151,12 +151,14 @@ From the employee Dashboard, select **Request leave**:
 
 Employees submit correction requests through **Edit Requests** (`/my-edit-requests`) for an incorrect clock-in, forgotten break start/end, or a clock-tower problem. The requested time must fall within the current week, and each employee can submit at most **three requests per month**. A reason is required. Break-related request types expose break start/end and break-reason fields.
 
-This workflow is **different from leave approval**:
+All attendance and break corrections use the same single-decision principle as leaves:
 
 1. A request starts as `pending_manager`.
-2. A Manager/HOD reviews it in **Edit Approvals** (`/edit-requests`). Manager approval moves it to `pending_admin`; Manager rejection is final.
-3. An Admin/finalizer makes the final decision. On final approval, the clock-in or break correction is applied to the attendance record. Correcting a clock-in can recalculate late/on-time status and worked/break duration.
+2. The employee's Manager or assigned HOD reviews it in **Edit Approvals** (`/edit-requests`). Approval or rejection is final; it never moves to Admin.
+3. On approval, the clock-in or break correction is immediately applied to the attendance record. Correcting a clock-in can recalculate late/on-time status and worked/break duration.
 4. Decision history shows the actor and stage. Repeating an action on an already processed request produces a friendly error.
+
+Admin and Super Admin users do not receive new correction requests or have access to the Edit Approvals page. A migration finalizes older Manager-approved `pending_admin` corrections and applies their changes; older requests without a Manager approval return to `pending_manager`.
 
 Approval tables show only **Approve** and **Reject** buttons; they do not display optional-note inputs. Manager-stage correction requests older than one week cannot be changed.
 
@@ -172,7 +174,7 @@ On the detail page, choose a **Month**, **Last 7 days**, **Last 30 days**, or **
 
 | Page | Purpose |
 | --- | --- |
-| Admin Dashboard (`/admin`) | Active employee count, working now, pending leaves/edits, and live attendance. Excludes Super Admin from employee counts. |
+| Admin Dashboard (`/admin`) | Active employee count, working now, pending leaves/edits, and live attendance. Excludes Super Admin from employee counts; pending counts are informational, not approval actions. |
 | Employees (`/admin/employees`) | Search and filter by department or Manager/HOD; create, edit, employ/unemploy, or delete users. |
 | Departments (`/admin/departments`) | Manage department names/codes, HODs, active state, and employee/Manager counts. |
 | Timesheets (`/admin/timesheets`) | Filter daily records by date, employee, department, or status; show 20/50/100 rows per page. |
@@ -204,7 +206,7 @@ Common checks:
 - **Cannot clock in:** Check the effective working day, shift start/end, early window, and whether a record already exists for that shift.
 - **A break option is missing:** Check the effective break configuration, its scope/date, and the option's Active toggle.
 - **A Manager cannot see a request or team member:** Check the employee's **Reports to manager/HOD** setting, department, and HOD department assignment.
-- **Leave appears to need Admin approval:** Leave approval ends with the Manager/HOD decision. `pending_admin` belongs to the attendance-correction workflow, not the current leave workflow.
+- **A request appears to need Admin approval:** Leave and every attendance/break correction end with a Manager/HOD decision. Refresh the page after deploying the latest migrations so older `pending_admin` records are reconciled.
 - **Automatic clock-out is not running:** Check the scheduler and the effective shift end time.
 - **Uploads cannot be opened:** Check `php artisan storage:link`, `storage/app/public` permissions, and `APP_URL`.
 
