@@ -15,7 +15,7 @@ class ConfigurationController extends Controller
         $this->authorizeAdmin($request);
         $versions=ConfigurationVersion::with('creator')->effectiveOn(today())->orderBy('configuration_type')->orderBy('scope_type')->get();
         $departments=Department::where('active',true)->orderBy('name')->get();
-        $employees=User::where('employeed',true)->orderBy('name')->get();
+        $employees=User::where('employeed',true)->where('role','!=','super_admin')->orderBy('name')->get();
         return view('admin.configurations',compact('versions','departments','employees'));
     }
 
@@ -30,7 +30,7 @@ class ConfigurationController extends Controller
         ]);
         if($data['scope_type']!=='global'&&empty($data['scope_id']))return back()->withErrors(['scope_id'=>'Select the affected department or employee.'])->withInput();
         if($data['scope_type']==='department'&&!Department::whereKey($data['scope_id'])->exists())abort(422);
-        if($data['scope_type']==='employee'&&!User::whereKey($data['scope_id'])->exists())abort(422);
+        if($data['scope_type']==='employee'&&!User::whereKey($data['scope_id'])->where('role','!=','super_admin')->exists())abort(422);
         $value=$this->value($data);
         $manager->createVersion($data+['value'=>$value],$request->user());
         return back()->with('success','Configuration saved and affected users notified.');

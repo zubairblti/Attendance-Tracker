@@ -1,3 +1,28 @@
-@extends('layouts.app') @section('heading','My Profile') @section('subheading','Manage your personal details, security and browser notifications.')
-@section('content')<div class="profile-layout"><form class="card form-card" method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data">@csrf @method('PATCH')<div class="profile-head">@if($user->image_path)<img class="avatar xl avatar-image" src="{{ Storage::url($user->image_path) }}" alt="Profile">@else<span class="avatar xl">{{ $user->initials() }}</span>@endif<div><h2>{{ $user->name }}</h2><p>{{ $user->role }} · {{ $user->department }}</p></div></div><label>Name<input name="name" value="{{ old('name',$user->name) }}" required></label><label>Email<input value="{{ $user->email }}" disabled></label><label>Phone number<input name="phone_number" value="{{ old('phone_number',$user->phone_number) }}"></label><label>Address<textarea name="address" rows="3">{{ old('address',$user->address) }}</textarea></label><label>Profile image<input type="file" name="image" accept="image/*"></label><button class="btn primary">Save profile</button></form><form class="card form-card" method="post" action="{{ route('profile.password') }}">@csrf @method('PATCH')<h2>Change password</h2><label>Current password<input type="password" name="current_password" required></label><label>New password<input type="password" name="password" required></label><label>Confirm new password<input type="password" name="password_confirmation" required></label><button class="btn primary">Update password</button></form><section class="card form-card"><h2>Browser notifications</h2><p class="form-help">Enable persistent push notifications on this browser.</p><button class="btn secondary" type="button" id="enable-push" @disabled(!env('VAPID_PUBLIC_KEY'))>{{ env('VAPID_PUBLIC_KEY')?'Enable browser notifications':'Add VAPID keys in .env first' }}</button><small id="push-status"></small></section></div>@endsection
-@push('scripts')@if(env('VAPID_PUBLIC_KEY'))<script>document.querySelector('#enable-push').addEventListener('click',async()=>{const status=document.querySelector('#push-status');try{const registration=await navigator.serviceWorker.register('/sw.js');const permission=await Notification.requestPermission();if(permission!=='granted')throw new Error('Permission was not granted');const key=Uint8Array.from(atob('{{ env('VAPID_PUBLIC_KEY') }}'.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));const subscription=await registration.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});await fetch('{{ route('push.store') }}',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content},body:JSON.stringify(subscription)});status.textContent='Browser notifications enabled.'}catch(error){status.textContent=error.message}})</script>@endif@endpush
+@extends('layouts.app')
+@section('heading','My Profile')
+@section('subheading','Manage your personal details and account security.')
+@section('content')
+<div class="profile-layout">
+ <form class="card form-card" method="post" action="{{ route('profile.update') }}" enctype="multipart/form-data">
+  @csrf @method('PATCH')
+  <div class="profile-head">
+   @if($user->image_path)<img class="avatar xl avatar-image" src="{{ Storage::url($user->image_path) }}" alt="Profile">@else<span class="avatar xl">{{ $user->initials() }}</span>@endif
+   <div><h2>{{ $user->name }}</h2><p>{{ $user->role }} · {{ $user->department }}</p></div>
+  </div>
+  <label>Name<input name="name" value="{{ old('name',$user->name) }}" required></label>
+  <label>Email<input value="{{ $user->email }}" disabled></label>
+  <label>Phone number<input name="phone_number" value="{{ old('phone_number',$user->phone_number) }}"></label>
+  <label>Address<textarea name="address" rows="3">{{ old('address',$user->address) }}</textarea></label>
+  <label>Profile image<input type="file" name="image" accept="image/*"></label>
+  <button class="btn primary">Save profile</button>
+ </form>
+ <form class="card form-card" method="post" action="{{ route('profile.password') }}">
+  @csrf @method('PATCH')
+  <h2>Change password</h2>
+  <label>Current password<input type="password" name="current_password" required></label>
+  <label>New password<input type="password" name="password" required></label>
+  <label>Confirm new password<input type="password" name="password_confirmation" required></label>
+  <button class="btn primary">Update password</button>
+ </form>
+</div>
+@endsection
